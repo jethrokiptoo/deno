@@ -1,0 +1,93 @@
+:root {
+    --bg-color: #05070f;
+    --card-bg: rgba(12, 16, 29, 0.75);
+    --border-glow: rgba(0, 243, 255, 0.25);
+    --text-main: #e2e8f0;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    overflow-x: hidden;
+}
+
+/* Custom fonts */
+.font-orbitron {
+    font-family: 'Orbitron', sans-serif;
+}
+
+.font-mono-code {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Animated canvas background */
+#particleCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Glassmorphism panels */
+.glass-panel {
+    background: rgba(12, 16, 29, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 243, 255, 0.15);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+/* Neumorphic buttons */
+.neu-button {
+    background: linear-gradient(
+        145deg,
+        rgba(18, 24, 43, 0.9),
+        rgba(8, 12, 22, 0.9)
+    );
+
+    border: 1px solid rgba(0, 243, 255, 0.2);
+
+    box-shadow:
+        4px 4px 10px rgba(0, 0, 0, 0.5),
+        -2px -2px 8px rgba(255, 255, 255, 0.03);
+
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.neu-button:hover {
+    border-color: rgba(0, 243, 255, 0.6);
+
+    box-shadow:
+        0 0 15px rgba(0, 243, 255, 0.4),
+        2px 2px 6px rgba(0, 0, 0, 0.6);
+
+    transform: translateY(-2px);
+}
+
+.neu-button:active {
+    transform: translateY(1px);
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.7);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(5, 7, 15, 0.8);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(181, 55, 242, 0.4);
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 243, 255, 0.7);
+}

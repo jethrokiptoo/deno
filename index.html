@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LexiPulse — Cyber-Neumorphic Quantum Lexicon</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            bg: '#05070f',
+                            card: '#0c101d',
+                            border: 'rgba(56, 189, 248, 0.25)',
+                            neonCyan: '#00f3ff',
+                            neonPurple: '#b537f2',
+                            neonPink: '#ff007f',
+                            neonYellow: '#ffe600',
+                            glow: 'rgba(0, 243, 255, 0.15)'
+                        }
+                    },
+                    animation: {
+                        'pulse-glow': 'pulseGlow 3s infinite alternate',
+                        'float': 'float 4s ease-in-out infinite',
+                        'scanline': 'scanline 8s linear infinite'
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%': {
+                                boxShadow: '0 0 15px rgba(0, 243, 255, 0.2), 0 0 30px rgba(181, 55, 242, 0.1)'
+                            },
+                            '100%': {
+                                boxShadow: '0 0 30px rgba(0, 243, 255, 0.5), 0 0 60px rgba(181, 55, 242, 0.3)'
+                            }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-6px)' }
+                        },
+                        scanline: {
+                            '0%': { transform: 'translateY(-100%)' },
+                            '100%': { transform: 'translateY(1000%)' }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+
+    <!-- Font Awesome icons and Google Fonts -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- Your CSS file -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="min-h-screen flex flex-col justify-between relative selection:bg-cyan-500 selection:text-black">
+
+    <!-- Animated background -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- Toast notifications -->
+    <div
+        id="toastContainer"
+        class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"
+    ></div>
+
+    <!-- Header navigation -->
+    <header class="sticky top-0 z-40 glass-panel border-b border-cyan-500/20 px-4 lg:px-8 py-3.5 transition-colors">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+
+            <div
+                class="flex items-center gap-3 cursor-pointer group"
+                onclick="loadWord('synthwave')"
+            >
+                <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-cyan-500 via-purple-600 to-pink-500 p-[2px] shadow-lg shadow-cyan-500/20 group-hover:shadow-cyan-500/40 transition-all duration-300">
+                    <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
+                        <i class="fa-solid fa-wave-square text-cyan-400 text-xl group-hover:scale-110 transition-transform"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-wider font-orbitron bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-500 bg-clip-text text-transparent">
+                        LEXIPULSE
+                    </h1>
+                    <p class="text-[9px] text-cyan-400/80 tracking-widest font-mono-code uppercase -mt-1">
+                        Quantum Lexicon v2.5
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-4">
+                <button
+                    onclick="triggerSurpriseWord()"
+                    aria-label="Surprise Me Random Word"
+                    class="neu-button px-3 py-2 rounded-xl text-xs font-semibold text-pink-400 flex items-center gap-2"
+                >
+                    <i class="fa-solid fa-dice text-sm"></i>
+                    <span class="hidden sm:inline">Surprise Me</span>
+                </button>
+
+                <button
+                    id="bookmarksBtn"
+                    aria-label="Open Saved Bookmarks"
+                    class="relative neu-button p-2.5 rounded-xl text-slate-300 hover:text-cyan-400"
+                >
+                    <i class="fa-solid fa-bookmark text-base"></i>
+                    <span
+                        id="bookmarkCount"
+                        class="absolute -top-1.5 -right-1.5 bg-gradient-to-r from-pink-500 to-purple-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center hidden"
+                    >0</span>
+                </button>
+
+                <button
+                    id="historyBtn"
+                    aria-label="Open Search History Timeline"
+                    class="neu-button p-2.5 rounded-xl text-slate-300 hover:text-purple-400"
+                >
+                    <i class="fa-solid fa-clock-rotate-left text-base"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="relative z-10 flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-8">
+
+        <!-- Search section -->
+        <section class="max-w-3xl mx-auto space-y-4">
+            <form id="searchForm" class="relative group" onsubmit="handleSearch(event)">
+                <div class="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-purple-600 to-pink-500 rounded-2xl blur-md opacity-30 group-hover:opacity-70 transition duration-500 group-focus-within:opacity-90"></div>
+
+                <div class="relative flex items-center bg-slate-950/90 border border-cyan-500/30 rounded-2xl shadow-2xl overflow-hidden focus-within:border-cyan-400 transition-all">
+                    <i class="fa-solid fa-magnifying-glass text-cyan-400 ml-5 text-lg"></i>
+
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Pulse search word (e.g. 'synthwave', 'quantum', 'cybernetics')..."
+                        autocomplete="off"
+                        aria-label="Search term input"
+                        class="w-full bg-transparent py-4 px-4 text-slate-100 placeholder-slate-500 text-base sm:text-lg focus:outline-none"
+                    >
+
+                    <button
+                        type="button"
+                        id="clearSearchBtn"
+                        aria-label="Clear Input"
+                        class="p-2 text-slate-500 hover:text-slate-300 mr-1 hidden"
+                    >
+                        <i class="fa-solid fa-circle-xmark text-lg"></i>
+                    </button>
+
+                    <button
+                        type="submit"
+                        aria-label="Submit Search"
+                        class="mr-2 px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-bold font-orbitron tracking-wider text-sm rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-2"
+                    >
+                        <span>PULSE</span>
+                        <i class="fa-solid fa-bolt text-xs"></i>
+                    </button>
+                </div>
+            </form>
+
+            <div class="flex flex-wrap items-center justify-between text-xs text-slate-400 px-1 gap-2">
+                <div class="flex items-center gap-1.5 flex-wrap" id="recentTags">
+                    <span class="text-slate-500 font-mono-code">Popular:</span>
+                    <button onclick="loadWord('cybernetics')" class="hover:text-cyan-400 underline decoration-cyan-500/40">cybernetics</button>
+                    <button onclick="loadWord('hologram')" class="hover:text-cyan-400 underline decoration-cyan-500/40">hologram</button>
+                    <button onclick="loadWord('neon')" class="hover:text-cyan-400 underline decoration-cyan-500/40">neon</button>
+                </div>
+
+                <span class="hidden md:inline-flex items-center gap-1 text-[11px] font-mono-code bg-slate-900/80 px-2 py-0.5 rounded border border-slate-800">
+                    Shortcut <kbd class="px-1 bg-slate-800 text-cyan-400 font-bold rounded">/</kbd>
+                </span>
+            </div>
+        </section>
+
+        <!-- Word of the day -->
+        <section id="wordOfDaySection" class="glass-panel p-6 rounded-3xl border border-purple-500/30 relative overflow-hidden bg-gradient-to-r from-slate-950 via-purple-950/20 to-slate-950">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2 text-xs font-bold font-orbitron text-purple-400 uppercase tracking-widest">
+                        <i class="fa-solid fa-sparkles text-pink-400"></i>
+                        <span>Quantum Word of the Day</span>
+                    </div>
+                    <h3 id="wotdWord" class="text-2xl font-bold text-slate-100 capitalize font-orbitron">--</h3>
+                    <p id="wotdDef" class="text-sm text-slate-300 line-clamp-2 max-w-2xl font-light">
+                        Loading word of the day...
+                    </p>
+                </div>
+
+                <button id="wotdBtn" class="neu-button px-5 py-2.5 text-cyan-300 text-xs font-bold font-orbitron rounded-xl whitespace-nowrap flex items-center gap-2">
+                    <span>EXPLORE WORD</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Loading state -->
+        <section id="loadingState" class="hidden space-y-6 animate-pulse">
+            <div class="glass-panel p-8 rounded-3xl space-y-4 border border-cyan-500/20">
+                <div class="flex justify-between items-center">
+                    <div class="space-y-3">
+                        <div class="h-8 w-56 bg-slate-800/80 rounded-lg"></div>
+                        <div class="h-4 w-32 bg-slate-800/50 rounded-md"></div>
+                    </div>
+                    <div class="h-14 w-14 bg-slate-800/80 rounded-full"></div>
+                </div>
+                <div class="h-4 w-full bg-slate-800/40 rounded-md mt-6"></div>
+                <div class="h-4 w-5/6 bg-slate-800/40 rounded-md"></div>
+            </div>
+        </section>
+
+        <!-- Error state -->
+        <section id="errorState" class="hidden glass-panel p-8 sm:p-12 rounded-3xl border border-pink-500/40 text-center space-y-4 max-w-2xl mx-auto">
+            <div class="w-16 h-16 bg-pink-500/10 text-pink-400 rounded-full flex items-center justify-center mx-auto text-2xl border border-pink-500/30 shadow-lg shadow-pink-500/20">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+
+            <h3 id="errorTitle" class="text-xl font-extrabold font-orbitron text-slate-100">TERM NOT FOUND</h3>
+
+            <p id="errorMessage" class="text-sm text-slate-400 leading-relaxed max-w-md mx-auto">
+                No quantum definition entry matches your request. Verify spelling or search another term.
+            </p>
+
+            <button onclick="clearAndFocusSearch()" class="neu-button px-5 py-2.5 text-slate-200 text-xs font-bold rounded-xl inline-flex items-center gap-2">
+                <i class="fa-solid fa-rotate-left"></i>
+                <span>Try Another Word</span>
+            </button>
+        </section>
+
+        <!-- Dictionary results -->
+        <section id="resultsContainer" class="space-y-8 hidden">
+
+            <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-cyan-500/30 relative overflow-hidden animate-pulse-glow">
+                <div class="flex flex-wrap items-center justify-between gap-6">
+
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-4">
+                            <h2 id="resultWord" class="text-3xl sm:text-5xl font-black font-orbitron text-slate-100 tracking-tight capitalize">--</h2>
+
+                            <button id="bookmarkToggleBtn" aria-label="Bookmark word" class="p-2 text-slate-500 hover:text-pink-400 text-2xl transition-all">
+                                <i class="fa-regular fa-bookmark"></i>
+                            </button>
+                        </div>
+
+                        <p id="resultPhonetic" class="text-lg text-cyan-400 font-mono-code tracking-wide">--</p>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row items-center gap-4 bg-slate-950/80 border border-slate-800 p-4 rounded-2xl shadow-inner w-full sm:w-auto">
+                        <button id="playAudioBtn" aria-label="Play pronunciation audio" class="w-12 h-12 bg-gradient-to-tr from-cyan-500 to-purple-600 hover:scale-105 active:scale-95 text-white rounded-xl flex items-center justify-center text-lg shadow-lg shadow-cyan-500/25 transition-all">
+                            <i id="playIcon" class="fa-solid fa-play ml-0.5"></i>
+                        </button>
+
+                        <canvas id="waveformCanvas" width="160" height="40" class="w-40 h-10 bg-slate-900/90 rounded-lg border border-cyan-500/20"></canvas>
+
+                        <div class="flex items-center gap-2 border-l border-slate-800 pl-3">
+                            <button onclick="copyWordDetails()" aria-label="Copy to clipboard" title="Copy to clipboard" class="p-2 text-slate-400 hover:text-cyan-400 rounded-lg hover:bg-slate-900 transition-all">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+
+                            <button onclick="shareWord()" aria-label="Share word" title="Share" class="p-2 text-slate-400 hover:text-purple-400 rounded-lg hover:bg-slate-900 transition-all">
+                                <i class="fa-solid fa-share-nodes"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <audio id="audioPlayer" class="hidden"></audio>
+            </div>
+
+            <!-- Interactive synonym mind map -->
+            <div id="mindmapSection" class="glass-panel p-6 rounded-3xl border border-purple-500/30 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold font-orbitron text-purple-400 uppercase tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-diagram-project"></i>
+                        Interactive Synonym Mind-Map Preview
+                    </span>
+
+                    <span class="text-[10px] text-slate-500 font-mono-code">Click nodes to explore</span>
+                </div>
+
+                <div id="mindmapCanvasContainer" class="w-full h-44 bg-slate-950/80 rounded-2xl border border-slate-800 relative overflow-hidden flex items-center justify-center">
+                    <canvas id="synonymMindmapCanvas" class="w-full h-full cursor-pointer"></canvas>
+                </div>
+            </div>
+
+            <!-- Definitions will be added with JavaScript -->
+            <div id="meaningsContainer" class="space-y-6"></div>
+
+            <div class="text-xs text-slate-500 border-t border-slate-800/80 pt-4 flex flex-wrap items-center justify-between gap-2 font-mono-code">
+                <span class="flex items-center gap-1.5">
+                    <i class="fa-solid fa-database text-cyan-400"></i>
+                    API Endpoint: Free Dictionary API
+                </span>
+
+                <a id="sourceUrl" href="#" target="_blank" rel="noopener" class="text-cyan-400 hover:underline flex items-center gap-1">
+                    <span>Wiktionary Entry Reference</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <!-- Saved words drawer -->
+    <div id="bookmarkDrawer" class="fixed inset-y-0 right-0 w-full sm:w-96 glass-panel border-l border-cyan-500/30 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+        <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-2 text-pink-400 font-bold font-orbitron">
+                <i class="fa-solid fa-bookmark"></i>
+                <span>SAVED LEXICON</span>
+            </div>
+
+            <button id="closeBookmarkBtn" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <div id="bookmarkList" class="flex-grow overflow-y-auto p-4 space-y-2"></div>
+    </div>
+
+    <!-- Search history drawer -->
+    <div id="historyDrawer" class="fixed inset-y-0 right-0 w-full sm:w-96 glass-panel border-l border-purple-500/30 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+        <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-2 text-purple-400 font-bold font-orbitron">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>TIMELINE HISTORY</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button onclick="clearHistory()" class="text-xs text-pink-400 hover:underline font-mono-code">Clear All</button>
+
+                <button id="closeHistoryBtn" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="historyDrawerList" class="flex-grow overflow-y-auto p-4 space-y-2"></div>
+    </div>
+
+    <!-- Drawer backdrop -->
+    <div id="drawerBackdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 hidden transition-opacity"></div>
+
+    <!-- Footer -->
+    <footer class="relative z-10 glass-panel border-t border-slate-800 py-4 px-6 text-center text-xs text-slate-500 font-mono-code mt-12">
+        <span>LEXIPULSE &copy; 2026 QUANTUM LEXICON SPA — SYNTHWAVE EDITION</span>
+    </footer>
+
+    <!-- Your JavaScript file -->
+    <script src="script.js" defer></script>
+</body>
+</html>
